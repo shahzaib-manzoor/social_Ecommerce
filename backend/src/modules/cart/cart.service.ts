@@ -40,10 +40,13 @@ export class CartService {
     const total = items.reduce((sum, item) => sum + item.subtotal, 0);
 
     return {
-      ...cart.toJSON(),
+      _id: cart._id,
+      userId: cart.userId,
       items,
       total,
-    };
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt,
+    } as CartWithProducts;
   }
 
   async addToCart(userId: string, input: AddToCartInput): Promise<CartWithProducts> {

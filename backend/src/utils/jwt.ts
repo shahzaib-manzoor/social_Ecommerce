@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import mongoose from 'mongoose';
 
 export interface JWTPayload {
   userId: string;
@@ -9,14 +8,14 @@ export interface JWTPayload {
 
 export const generateAccessToken = (payload: JWTPayload): string => {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-  });
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN as string | number,
+  } as jwt.SignOptions);
 };
 
 export const generateRefreshToken = (payload: JWTPayload): string => {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-  });
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN as string | number,
+  } as jwt.SignOptions);
 };
 
 export const verifyAccessToken = (token: string): JWTPayload => {

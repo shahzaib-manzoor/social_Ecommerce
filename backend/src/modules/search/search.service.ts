@@ -45,7 +45,7 @@ export class SearchService {
   }
 
   // Apply intent-based sorting and filtering
-  private applyIntent(products: IProduct[], intent: SearchIntent, query: string): IProduct[] {
+  private applyIntent(products: IProduct[], intent: SearchIntent, _query: string): IProduct[] {
     let results = [...products];
 
     // Only apply price filtering if we have results
@@ -71,11 +71,10 @@ export class SearchService {
       results.sort((a, b) => a.price - b.price);
     } else if (intent.sortBy === 'price_desc') {
       results.sort((a, b) => b.price - a.price);
-    } else if (intent.sortBy === 'rating') {
-      results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (intent.sortBy === 'newest') {
       results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
+    // Note: Rating sort removed as rating is calculated from reviews, not stored on product
 
     return results;
   }
@@ -206,7 +205,6 @@ export class SearchService {
       const intent = this.parseSearchIntent(query);
       const cleanedQuery = this.cleanQuery(query);
       const searchQuery = cleanedQuery || query;
-      const queryWords = searchQuery.toLowerCase().split(/\s+/);
 
       const filter: any = {};
       if (category) {
