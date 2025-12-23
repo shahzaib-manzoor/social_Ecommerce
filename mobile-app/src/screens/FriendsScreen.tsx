@@ -2,300 +2,134 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
+  Image,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  TextInput,
-  Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Header } from '../components/common/Header';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import {
-  fetchFriends,
-  fetchPendingRequests,
-  sendFriendRequest,
-  acceptRequest,
-  rejectRequest,
-  removeFriend,
-  searchUsers,
-} from '../store/slices/friendsSlice';
-import { colors } from '../theme';
+import { fetchFriends } from '../store/slices/friendsSlice';
+import { colors, spacing, typography } from '../theme';
 
-type Tab = 'friends' | 'requests' | 'search';
+interface Friend {
+  _id: string;
+  username: string;
+  avatar?: string;
+  bio?: string;
+}
 
-export const FriendsScreen: React.FC = () => {
+export const FriendsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const dispatch = useAppDispatch();
-  const { friends, pendingRequests, searchResults, isLoading } = useAppSelector(
-    (state) => state.friends
-  );
-  const [activeTab, setActiveTab] = useState<Tab>('friends');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { friends, isLoading } = useAppSelector((state) => state.friends);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadFriends();
   }, []);
 
-  const loadData = () => {
+  const loadFriends = () => {
     dispatch(fetchFriends());
-    dispatch(fetchPendingRequests());
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      dispatch(searchUsers(searchQuery.trim()));
-    }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await dispatch(fetchFriends());
+    setRefreshing(false);
   };
 
-  const handleSendRequest = (userId: string) => {
-    dispatch(sendFriendRequest(userId))
-      .unwrap()
-      .then(() => {
-        Alert.alert('Success', 'Friend request sent!');
-      })
-      .catch((error) => {
-        Alert.alert('Error', error.message || 'Failed to send request');
-      });
+  const handleMenuPress = () => {
+    console.log('Menu pressed');
   };
 
-  const handleAcceptRequest = (requestId: string) => {
-    dispatch(acceptRequest(requestId))
-      .unwrap()
-      .then(() => {
-        loadData();
-      });
+  const handleSearchPress = () => {
+    navigation.navigate('Search');
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    dispatch(rejectRequest(requestId))
-      .unwrap()
-      .then(() => {
-        loadData();
-      });
+  const handleLikeFriend = (friendId: string) => {
+    console.log('Like friend:', friendId);
+    // Implement like/favorite friend functionality
   };
 
-  const handleRemoveFriend = (friendId: string, username: string) => {
-    Alert.alert(
-      'Remove Friend',
-      `Are you sure you want to remove ${username} from your friends?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            dispatch(removeFriend(friendId))
-              .unwrap()
-              .then(() => {
-                loadData();
-              });
-          },
-        },
-      ]
-    );
+  const handleMessageFriend = (friendId: string) => {
+    navigation.navigate('Messages', { userId: friendId });
   };
 
-  const renderFriend = ({ item }: any) => (
-    <View style={styles.listItem}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {item.username?.charAt(0).toUpperCase()}
-        </Text>
-      </View>
-      <View style={styles.itemContent}>
-        <Text style={styles.username}>{item.username}</Text>
-        {item.bio && <Text style={styles.bio}>{item.bio}</Text>}
-      </View>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveFriend(item._id, item.username)}
-      >
-        <Text style={styles.removeButtonText}>Remove</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderRequest = ({ item }: any) => {
-    const requester = item.from;
+  if (isLoading && friends.length === 0) {
     return (
-      <View style={styles.listItem}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {requester?.username?.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-        <View style={styles.itemContent}>
-          <Text style={styles.username}>{requester?.username}</Text>
-          <Text style={styles.requestStatus}>Wants to be friends</Text>
-        </View>
-        <View style={styles.requestActions}>
-          <TouchableOpacity
-            style={styles.acceptButton}
-            onPress={() => handleAcceptRequest(item._id)}
-          >
-            <Text style={styles.acceptButtonText}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.rejectButton}
-            onPress={() => handleRejectRequest(item._id)}
-          >
-            <Text style={styles.rejectButtonText}>Reject</Text>
-          </TouchableOpacity>
+      <View style={styles.container}>
+        <Header onMenuPress={handleMenuPress} onSearchPress={handleSearchPress} />
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
-  };
-
-  const renderSearchResult = ({ item }: any) => {
-    const isFriend = friends.some((f) => f._id === item._id);
-    return (
-      <View style={styles.listItem}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.username?.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-        <View style={styles.itemContent}>
-          <Text style={styles.username}>{item.username}</Text>
-          {item.bio && <Text style={styles.bio}>{item.bio}</Text>}
-        </View>
-        {!isFriend && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => handleSendRequest(item._id)}
-          >
-            <Text style={styles.addButtonText}>Add</Text>
-          </TouchableOpacity>
-        )}
-        {isFriend && <Text style={styles.friendBadge}>Friend</Text>}
-      </View>
-    );
-  };
-
-  const renderEmpty = () => {
-    let message = '';
-    if (activeTab === 'friends') {
-      message = 'No friends yet. Search for users to add friends!';
-    } else if (activeTab === 'requests') {
-      message = 'No pending friend requests';
-    } else {
-      message = searchQuery ? 'No users found' : 'Search for users to add friends';
-    }
-
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>{message}</Text>
-      </View>
-    );
-  };
-
-  const renderContent = () => {
-    if (activeTab === 'friends') {
-      return (
-        <FlatList
-          data={friends}
-          keyExtractor={(item) => item._id}
-          renderItem={renderFriend}
-          ListEmptyComponent={renderEmpty}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={loadData}
-              colors={[colors.primary]}
-            />
-          }
-          contentContainerStyle={friends.length === 0 ? styles.emptyList : undefined}
-        />
-      );
-    } else if (activeTab === 'requests') {
-      return (
-        <FlatList
-          data={pendingRequests}
-          keyExtractor={(item) => item._id}
-          renderItem={renderRequest}
-          ListEmptyComponent={renderEmpty}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={loadData}
-              colors={[colors.primary]}
-            />
-          }
-          contentContainerStyle={
-            pendingRequests.length === 0 ? styles.emptyList : undefined
-          }
-        />
-      );
-    } else {
-      return (
-        <FlatList
-          data={searchResults}
-          keyExtractor={(item) => item._id}
-          renderItem={renderSearchResult}
-          ListEmptyComponent={renderEmpty}
-          contentContainerStyle={
-            searchResults.length === 0 ? styles.emptyList : undefined
-          }
-        />
-      );
-    }
-  };
+  }
 
   return (
     <View style={styles.container}>
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'friends' && styles.activeTab]}
-          onPress={() => setActiveTab('friends')}
-        >
-          <Text
-            style={[styles.tabText, activeTab === 'friends' && styles.activeTabText]}
-          >
-            Friends ({friends.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'requests' && styles.activeTab]}
-          onPress={() => setActiveTab('requests')}
-        >
-          <Text
-            style={[styles.tabText, activeTab === 'requests' && styles.activeTabText]}
-          >
-            Requests ({pendingRequests.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'search' && styles.activeTab]}
-          onPress={() => setActiveTab('search')}
-        >
-          <Text
-            style={[styles.tabText, activeTab === 'search' && styles.activeTabText]}
-          >
-            Search
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <Header onMenuPress={handleMenuPress} onSearchPress={handleSearchPress} />
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />
+        }
+      >
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.pageHeader}>
+            <Text style={styles.pageTitle}>Friends</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAll}>See All  ›</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Search Bar */}
-      {activeTab === 'search' && (
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search users by username..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
+          {/* Friends Grid */}
+          <View style={styles.friendsGrid}>
+            {friends.map((friend: Friend) => (
+              <View key={friend._id} style={styles.friendCard}>
+                <View style={styles.friendImageContainer}>
+                  {friend.avatar ? (
+                    <Image source={{ uri: friend.avatar }} style={styles.friendImage} />
+                  ) : (
+                    <View style={styles.friendAvatarPlaceholder}>
+                      <Text style={styles.avatarText}>{friend.username[0].toUpperCase()}</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.friendInfo}>
+                  <Text style={styles.friendName} numberOfLines={1}>
+                    {friend.username}
+                  </Text>
+                  <View style={styles.friendActions}>
+                    <TouchableOpacity
+                      onPress={() => handleLikeFriend(friend._id)}
+                      style={styles.actionButton}
+                    >
+                      <Ionicons name="heart-outline" size={18} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleMessageFriend(friend._id)}
+                      style={styles.actionButton}
+                    >
+                      <Ionicons name="chatbubble-outline" size={18} color={colors.primary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {friends.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No friends yet. Start connecting!</Text>
+            </View>
+          )}
         </View>
-      )}
-
-      {/* Content */}
-      {renderContent()}
+      </ScrollView>
     </View>
   );
 };
@@ -303,166 +137,101 @@ export const FriendsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundSecondary,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  tab: {
+  scrollView: {
     flex: 1,
-    paddingVertical: 16,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
-  activeTab: {
-    borderBottomColor: colors.primary,
+  content: {
+    padding: spacing.md,
   },
-  tabText: {
-    fontSize: 14,
-    color: colors.darkGray,
-    fontWeight: '500',
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  activeTabText: {
+  pageTitle: {
+    ...typography.h3,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  seeAll: {
+    ...typography.body,
     color: colors.primary,
     fontWeight: '600',
   },
-  searchContainer: {
+  friendsGrid: {
     flexDirection: 'row',
-    padding: 16,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    fontSize: 14,
+  friendCard: {
+    width: '48%',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  searchButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    justifyContent: 'center',
+  friendImageContainer: {
+    width: '100%',
+    height: 180,
+    backgroundColor: colors.backgroundSecondary,
   },
-  searchButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
+  friendImage: {
+    width: '100%',
+    height: '100%',
   },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
+  friendAvatarPlaceholder: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    backgroundColor: colors.primary,
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: 48,
     fontWeight: 'bold',
-    color: colors.white,
+    color: colors.textInverse,
   },
-  itemContent: {
-    flex: 1,
+  friendInfo: {
+    padding: spacing.sm,
   },
-  username: {
-    fontSize: 16,
+  friendName: {
+    ...typography.body,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: spacing.xs,
+    textAlign: 'left',
   },
-  bio: {
-    fontSize: 13,
-    color: colors.darkGray,
-    marginTop: 2,
-  },
-  requestStatus: {
-    fontSize: 13,
-    color: colors.darkGray,
-    marginTop: 2,
-  },
-  requestActions: {
+  friendActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.xs,
   },
-  acceptButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  acceptButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  rejectButton: {
-    backgroundColor: colors.lightGray,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  rejectButtonText: {
-    color: colors.text,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  addButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  addButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  removeButton: {
-    borderWidth: 1,
-    borderColor: colors.error,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  removeButtonText: {
-    color: colors.error,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  friendBadge: {
-    color: colors.darkGray,
-    fontSize: 13,
-  },
-  emptyContainer: {
-    flex: 1,
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
   },
-  emptyList: {
-    flex: 1,
+  emptyState: {
+    paddingVertical: spacing.xl * 2,
+    alignItems: 'center',
   },
   emptyText: {
-    fontSize: 14,
-    color: colors.darkGray,
-    textAlign: 'center',
+    ...typography.body,
+    color: colors.textSecondary,
   },
 });

@@ -13,6 +13,8 @@ import friendsRoutes from './modules/friends/friends.routes';
 import messagesRoutes from './modules/messages/messages.routes';
 import searchRoutes from './modules/search/search.routes';
 import usersRoutes from './modules/users/users.routes';
+import uploadRoutes from './modules/upload/upload.routes';
+import categoryRoutes from './modules/categories/category.routes';
 
 const app: Application = express();
 
@@ -60,6 +62,8 @@ app.use('/api/v1/friends', friendsRoutes);
 app.use('/api/v1/messages', messagesRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/categories', categoryRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

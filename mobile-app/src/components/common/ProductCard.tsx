@@ -9,7 +9,23 @@ interface ProductCardProps {
   onLike?: () => void;
   showLikeButton?: boolean;
   isLiked?: boolean;
+  compact?: boolean;
 }
+
+const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+
+  for (let i = 0; i < 5; i++) {
+    stars.push(
+      <Text key={i} style={styles.star}>
+        {i < fullStars ? '★' : '☆'}
+      </Text>
+    );
+  }
+
+  return <View style={styles.ratingContainer}>{stars}</View>;
+};
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
@@ -17,26 +33,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onLike,
   showLikeButton = true,
   isLiked = false,
+  compact = false,
 }) => {
-  return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      <Image
-        source={{ uri: product.images[0] }}
-        style={styles.image}
-        resizeMode="cover"
-      />
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>{product.title}</Text>
-        <Text style={styles.price}>${product.price.toFixed(2)}</Text>
-        <Text style={styles.category}>{product.category}</Text>
+  const rating = product.rating || 7.5;
 
+  return (
+    <TouchableOpacity style={[styles.card, compact && styles.cardCompact]} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.imageWrapper}>
+        <Image
+          source={{ uri: product.images[0] }}
+          style={[styles.image, compact && styles.imageCompact]}
+          resizeMode="cover"
+        />
         {showLikeButton && onLike && (
-          <TouchableOpacity onPress={onLike} style={styles.likeButton}>
-            <Text style={styles.likeText}>
-              {isLiked ? '❤️' : '🤍'} {product.likes.length > 0 && product.likes.length}
+          <TouchableOpacity onPress={onLike} style={styles.heartButton}>
+            <Text style={styles.heartIcon}>
+              {isLiked ? '❤️' : '🤍'}
             </Text>
           </TouchableOpacity>
         )}
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.price}>Rs {product.price}</Text>
+        <View style={styles.ratingRow}>
+          <StarRating rating={rating} />
+          <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+        </View>
+        <Text style={styles.title} numberOfLines={1}>{product.title}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -54,31 +77,68 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  cardCompact: {
+    width: '100%',
+  },
+  imageWrapper: {
+    position: 'relative',
+  },
   image: {
     width: '100%',
     height: 200,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  imageCompact: {
+    height: 150,
+  },
+  heartButton: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  heartIcon: {
+    fontSize: 18,
   },
   content: {
-    padding: spacing.md,
-  },
-  title: {
-    ...typography.h4,
-    color: colors.text,
-    marginBottom: spacing.xs,
+    padding: spacing.sm,
   },
   price: {
-    ...typography.h3,
-    color: colors.primary,
+    ...typography.h4,
+    color: colors.text,
+    fontWeight: '600',
     marginBottom: spacing.xs,
   },
-  category: {
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    marginRight: spacing.xs,
+  },
+  star: {
+    color: '#FFA500',
+    fontSize: 12,
+  },
+  ratingText: {
     ...typography.small,
     color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
-  likeButton: {
-    marginTop: spacing.sm,
-  },
-  likeText: {
-    fontSize: 16,
+  title: {
+    ...typography.small,
+    color: colors.text,
   },
 });

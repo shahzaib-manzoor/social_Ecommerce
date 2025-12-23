@@ -1,8 +1,8 @@
 export const colors = {
-  // Primary colors
-  primary: '#2d6a4f',
-  primaryDark: '#1b4332',
-  primaryLight: '#40916c',
+  // Primary colors (teal/turquoise from design)
+  primary: '#4DB8AC',
+  primaryDark: '#3A9A8F',
+  primaryLight: '#6FC9BE',
 
   // Background colors
   background: '#ffffff',

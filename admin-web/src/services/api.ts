@@ -138,6 +138,59 @@ class ApiService {
       throw new Error(data.error || 'Failed to delete product');
     }
   }
+
+  // Category APIs
+  async getCategories(activeOnly: boolean = false): Promise<any[]> {
+    const params = new URLSearchParams();
+    if (activeOnly) {
+      params.append('activeOnly', 'true');
+    }
+
+    const { data } = await this.api.get<ApiResponse<any[]>>(`/categories?${params.toString()}`);
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to get categories');
+    }
+    return data.data;
+  }
+
+  async getCategory(id: string): Promise<any> {
+    const { data } = await this.api.get<ApiResponse>(`/categories/${id}`);
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to get category');
+    }
+    return data.data;
+  }
+
+  async createCategory(input: { name: string; description?: string; image: string }): Promise<any> {
+    const { data } = await this.api.post<ApiResponse>('/categories', input);
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to create category');
+    }
+    return data.data;
+  }
+
+  async updateCategory(id: string, input: Partial<{ name: string; description?: string; image: string }>): Promise<any> {
+    const { data } = await this.api.put<ApiResponse>(`/categories/${id}`, input);
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to update category');
+    }
+    return data.data;
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    const { data } = await this.api.delete<ApiResponse>(`/categories/${id}`);
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to delete category');
+    }
+  }
+
+  async toggleCategoryStatus(id: string): Promise<any> {
+    const { data } = await this.api.patch<ApiResponse>(`/categories/${id}/toggle-status`);
+    if (!data.success || !data.data) {
+      throw new Error(data.error || 'Failed to toggle category status');
+    }
+    return data.data;
+  }
 }
 
 export const apiService = new ApiService();

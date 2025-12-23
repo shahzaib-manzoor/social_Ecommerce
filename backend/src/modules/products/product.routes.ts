@@ -10,9 +10,11 @@ const productController = new ProductController();
 // Public routes
 router.get('/', productController.getProducts.bind(productController));
 router.get('/:id', productController.getProduct.bind(productController));
+router.get('/:id/reviews', productController.getProductReviews.bind(productController));
 
 // Protected routes (authenticated users)
 router.post('/:id/like', authenticate, productController.likeProduct.bind(productController));
+router.post('/:id/reviews', authenticate, productController.addReview.bind(productController));
 router.get('/friends/liked', authenticate, productController.getProductsByFriends.bind(productController));
 
 // Admin-only routes

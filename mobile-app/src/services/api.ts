@@ -4,6 +4,8 @@ import { ApiResponse, AuthResponse, Product, Cart, Conversation, FriendRequest, 
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
+console.log('📡 API Base URL:', API_BASE_URL);
+
 class ApiService {
   private api: AxiosInstance;
 
@@ -13,7 +15,7 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 10000,
+      timeout: 15000, // Increased timeout for slower networks
     });
 
     this.setupInterceptors();
@@ -27,15 +29,40 @@ class ApiService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        console.log('🔵 API Request:', config.method?.toUpperCase(), config.url);
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        console.error('🔴 Request Error:', error);
+        return Promise.reject(error);
+      }
     );
 
     // Response interceptor - handle token refresh
     this.api.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('✅ API Response:', response.config.url, response.status);
+        return response;
+      },
       async (error: AxiosError) => {
+        console.error('❌ API Error:', {
+          url: error.config?.url,
+          status: error.response?.status,
+          message: error.message,
+          code: error.code,
+        });
+
+        // Network error handling
+        if (error.code === 'ECONNABORTED') {
+          console.error('⏱️ Request timeout - Server may be down or unreachable');
+          return Promise.reject(new Error('Request timeout. Please check your network connection.'));
+        }
+
+        if (error.code === 'ERR_NETWORK' || !error.response) {
+          console.error('🌐 Network Error - Cannot reach server at:', API_BASE_URL);
+          return Promise.reject(new Error('Cannot connect to server. Please check your network.'));
+        }
+
         const originalRequest: any = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -230,6 +257,19 @@ class ApiService {
   async markAsRead(conversationId: string): Promise<void> {
     const { data} = await this.api.post(`/messages/conversations/${conversationId}/read`);
     if (!data.success) throw new Error(data.error || 'Failed to mark as read');
+  }
+
+  // Review APIs
+  async addReview(productId: string, rating: number, comment: string): Promise<any> {
+    const { data } = await this.api.post<ApiResponse<any>>(`/products/${productId}/reviews`, { rating, comment });
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to add review');
+    return data.data;
+  }
+
+  async getProductReviews(productId: string, page: number = 1, limit: number = 10): Promise<any> {
+    const { data } = await this.api.get<ApiResponse<any>>(`/products/${productId}/reviews`, { params: { page, limit } });
+    if (!data.success) throw new Error(data.error || 'Failed to get reviews');
+    return data.data;
   }
 
   // Search API

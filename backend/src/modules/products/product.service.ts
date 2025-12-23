@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Product, IProduct } from './product.model';
+import { Review, IReview } from './review.model';
 import { CreateProductInput, UpdateProductInput } from './product.validation';
 import { embeddingService } from '../../utils/embedding';
 
@@ -130,6 +131,61 @@ export class ProductService {
       total,
       page,
       totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async addReview(productId: string, userId: string, rating: number, comment: string): Promise<IReview> {
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    // Check if user already reviewed this product
+    const existingReview = await Review.findOne({ product: productId, user: userId });
+    if (existingReview) {
+      // Update existing review
+      existingReview.rating = rating;
+      existingReview.comment = comment;
+      await existingReview.save();
+      return existingReview.populate('user', 'username avatar');
+    }
+
+    // Create new review
+    const review = await Review.create({
+      product: productId,
+      user: userId,
+      rating,
+      comment,
+    });
+
+    return review.populate('user', 'username avatar');
+  }
+
+  async getProductReviews(productId: string, page: number = 1, limit: number = 10): Promise<{ reviews: IReview[]; total: number; page: number; totalPages: number; averageRating: number }> {
+    const skip = (page - 1) * limit;
+
+    const [reviews, total] = await Promise.all([
+      Review.find({ product: productId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('user', 'username avatar'),
+      Review.countDocuments({ product: productId }),
+    ]);
+
+    // Calculate average rating
+    const allReviews = await Review.find({ product: productId });
+    const averageRating = allReviews.length > 0
+      ? allReviews.reduce((sum, review) => sum + review.rating, 0) / allReviews.length
+      : 0;
+
+    return {
+      reviews,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      averageRating: Math.round(averageRating * 10) / 10,
     };
   }
 }

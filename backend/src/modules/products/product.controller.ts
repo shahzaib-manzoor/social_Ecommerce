@@ -45,12 +45,24 @@ export class ProductController {
   async getProduct(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const product = await productService.getProduct(id);
+      const [product, reviewsData] = await Promise.all([
+        productService.getProduct(id),
+        productService.getProductReviews(id, 1, 5), // Get first 5 reviews
+      ]);
+
       if (!product) {
         sendError(res, 'Product not found', 404);
         return;
       }
-      sendSuccess(res, product);
+
+      // Combine product with reviews and rating
+      const productWithReviews = {
+        ...product.toObject(),
+        reviews: reviewsData.reviews,
+        rating: reviewsData.averageRating,
+      };
+
+      sendSuccess(res, productWithReviews);
     } catch (error) {
       sendError(res, (error as Error).message, 400);
     }
@@ -95,6 +107,46 @@ export class ProductController {
       const limit = parseInt(req.query.limit as string) || 20;
 
       const result = await productService.getProductsByFriends(req.user.userId, page, limit);
+      sendSuccess(res, result);
+    } catch (error) {
+      sendError(res, (error as Error).message, 400);
+    }
+  }
+
+  async addReview(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        sendError(res, 'Not authenticated', 401);
+        return;
+      }
+
+      const { id } = req.params;
+      const { rating, comment } = req.body;
+
+      if (!rating || !comment) {
+        sendError(res, 'Rating and comment are required', 400);
+        return;
+      }
+
+      if (rating < 1 || rating > 5) {
+        sendError(res, 'Rating must be between 1 and 5', 400);
+        return;
+      }
+
+      const review = await productService.addReview(id, req.user.userId, rating, comment);
+      sendSuccess(res, review, 201);
+    } catch (error) {
+      sendError(res, (error as Error).message, 400);
+    }
+  }
+
+  async getProductReviews(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const result = await productService.getProductReviews(id, page, limit);
       sendSuccess(res, result);
     } catch (error) {
       sendError(res, (error as Error).message, 400);

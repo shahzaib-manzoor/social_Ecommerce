@@ -31,7 +31,12 @@ export class SearchController {
           break;
       }
 
-      sendSuccess(res, { query, results, count: results.length });
+      sendSuccess(res, {
+        query,
+        products: results, // Return as 'products' for consistency with other endpoints
+        results, // Keep 'results' for backward compatibility
+        count: results.length
+      });
     } catch (error) {
       sendError(res, (error as Error).message, 400);
     }

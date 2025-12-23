@@ -4,6 +4,7 @@ import productsReducer from './slices/productsSlice';
 import cartReducer from './slices/cartSlice';
 import friendsReducer from './slices/friendsSlice';
 import messagesReducer from './slices/messagesSlice';
+import categoriesReducer from './slices/categoriesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     cart: cartReducer,
     friends: friendsReducer,
     messages: messagesReducer,
+    categories: categoriesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

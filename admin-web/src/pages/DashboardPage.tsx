@@ -66,6 +66,9 @@ export const DashboardPage: React.FC = () => {
         <Link to="/products/new" style={styles.createButton}>
           + Create New Product
         </Link>
+        <Link to="/categories" style={styles.categoryButton}>
+          Manage Categories
+        </Link>
       </div>
 
       {isLoading ? (
@@ -150,11 +153,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   actions: {
     marginBottom: '24px',
+    display: 'flex',
+    gap: '12px',
   },
   createButton: {
     display: 'inline-block',
     padding: '12px 24px',
     backgroundColor: '#2d6a4f',
+    color: 'white',
+    textDecoration: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+  },
+  categoryButton: {
+    display: 'inline-block',
+    padding: '12px 24px',
+    backgroundColor: '#457b9d',
     color: 'white',
     textDecoration: 'none',
     borderRadius: '6px',

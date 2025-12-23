@@ -9,11 +9,12 @@ const startServer = async (): Promise<void> => {
     // Connect to database
     await connectDatabase();
 
-    // Start server
-    app.listen(PORT, () => {
+    // Start server - listen on all network interfaces (0.0.0.0) to allow external connections
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📦 Environment: ${env.NODE_ENV}`);
-      console.log(`🔗 API: http://localhost:${PORT}/api/v1`);
+      console.log(`🔗 Local: http://localhost:${PORT}/api/v1`);
+      console.log(`🔗 Network: http://192.168.88.69:${PORT}/api/v1`);
       console.log(`💚 Health check: http://localhost:${PORT}/health`);
     });
   } catch (error) {

@@ -1,73 +1,58 @@
-// Image upload service using ImgBB (free tier)
-// Alternative: Cloudinary, Uploadcare
-
-const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY || '';
+// Image upload service using Cloudinary via backend API
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002/api/v1';
 
 export class ImageUploadService {
-  async uploadToImgBB(file: File): Promise<string> {
-    if (!IMGBB_API_KEY) {
-      throw new Error('Image upload API key not configured');
-    }
-
+  async uploadToCloudinary(file: File): Promise<string> {
     const formData = new FormData();
     formData.append('image', file);
 
     try {
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      // Upload via backend API which handles Cloudinary authentication
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        throw new Error('Not authenticated. Please log in again.');
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/upload/image`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Upload failed');
+      }
+
       const data = await response.json();
 
-      if (data.success && data.data?.url) {
+      if (data.data?.url) {
         return data.data.url;
       }
 
-      throw new Error('Upload failed');
-    } catch (error) {
-      console.error('ImgBB upload error:', error);
-      throw new Error('Failed to upload image');
-    }
-  }
-
-  async uploadToCloudinary(file: File, cloudName: string, uploadPreset: string): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
-
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.secure_url) {
-        return data.secure_url;
-      }
-
-      throw new Error('Upload failed');
+      throw new Error('Upload failed - no URL returned');
     } catch (error) {
       console.error('Cloudinary upload error:', error);
-      throw new Error('Failed to upload image');
+      throw error instanceof Error ? error : new Error('Failed to upload image to Cloudinary');
     }
   }
 
-  // Default method - uses ImgBB
+  // Default method - uses Cloudinary
   async uploadImage(file: File): Promise<string> {
     // Validate file
     if (!file.type.startsWith('image/')) {
       throw new Error('File must be an image');
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
-      throw new Error('Image size must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit for Cloudinary
+      throw new Error('Image size must be less than 10MB');
     }
 
-    return this.uploadToImgBB(file);
+    return this.uploadToCloudinary(file);
   }
 
   async uploadMultipleImages(files: File[]): Promise<string[]> {
