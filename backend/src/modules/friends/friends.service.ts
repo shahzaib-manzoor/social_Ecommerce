@@ -133,4 +133,42 @@ export class FriendsService {
 
     return users;
   }
+
+  async getFriendshipStatus(userId: string, targetUserId: string): Promise<{
+    status: 'friends' | 'pending_sent' | 'pending_received' | 'none';
+    requestId?: string;
+  }> {
+    // Check if they are friends
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.friends.some((id) => id.equals(new mongoose.Types.ObjectId(targetUserId)))) {
+      return { status: 'friends' };
+    }
+
+    // Check for pending friend request
+    const sentRequest = await FriendRequest.findOne({
+      from: userId,
+      to: targetUserId,
+      status: 'pending',
+    });
+
+    if (sentRequest) {
+      return { status: 'pending_sent', requestId: sentRequest._id.toString() };
+    }
+
+    const receivedRequest = await FriendRequest.findOne({
+      from: targetUserId,
+      to: userId,
+      status: 'pending',
+    });
+
+    if (receivedRequest) {
+      return { status: 'pending_received', requestId: receivedRequest._id.toString() };
+    }
+
+    return { status: 'none' };
+  }
 }

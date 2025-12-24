@@ -53,7 +53,13 @@ export class AuthController {
         return;
       }
 
-      sendSuccess(res, req.user);
+      const user = await authService.getUserById(req.user.userId);
+      if (!user) {
+        sendError(res, 'User not found', 404);
+        return;
+      }
+
+      sendSuccess(res, user);
     } catch (error) {
       sendError(res, (error as Error).message, 400);
     }

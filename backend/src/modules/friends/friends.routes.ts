@@ -13,6 +13,7 @@ router.get('/requests', friendsController.getPendingRequests.bind(friendsControl
 router.post('/requests/:requestId/accept', friendsController.acceptFriendRequest.bind(friendsController));
 router.post('/requests/:requestId/reject', friendsController.rejectFriendRequest.bind(friendsController));
 router.get('/', friendsController.getFriends.bind(friendsController));
+router.get('/status/:userId', friendsController.getFriendshipStatus.bind(friendsController));
 router.delete('/:friendId', friendsController.removeFriend.bind(friendsController));
 router.get('/search', friendsController.searchUsers.bind(friendsController));
 

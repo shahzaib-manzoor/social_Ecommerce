@@ -29,4 +29,24 @@ export class UsersController {
       sendError(res, (error as Error).message, 400);
     }
   }
+
+  async updateAvatar(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        sendError(res, 'Not authenticated', 401);
+        return;
+      }
+
+      const { avatar } = req.body;
+      if (!avatar) {
+        sendError(res, 'Avatar image is required', 400);
+        return;
+      }
+
+      const profile = await usersService.updateAvatar(req.user.userId, avatar);
+      sendSuccess(res, profile);
+    } catch (error) {
+      sendError(res, (error as Error).message, 400);
+    }
+  }
 }

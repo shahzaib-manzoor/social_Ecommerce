@@ -141,4 +141,35 @@ export class AuthService {
   async logout(refreshTokenValue: string): Promise<void> {
     await RefreshToken.deleteOne({ token: refreshTokenValue });
   }
+
+  async getUserById(userId: string): Promise<{
+    _id: string;
+    username: string;
+    email: string;
+    avatar?: string;
+    bio?: string;
+    role: 'user' | 'admin';
+    friends: string[];
+    interests: string[];
+    createdAt: Date;
+    updatedAt: Date;
+  } | null> {
+    const user = await User.findById(userId);
+    if (!user) {
+      return null;
+    }
+
+    return {
+      _id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      bio: user.bio,
+      role: user.role,
+      friends: user.friends.map((id) => id.toString()),
+      interests: user.interests,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
 }

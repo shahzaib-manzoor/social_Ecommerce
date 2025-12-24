@@ -112,4 +112,19 @@ export class FriendsController {
       sendError(res, (error as Error).message, 400);
     }
   }
+
+  async getFriendshipStatus(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        sendError(res, 'Not authenticated', 401);
+        return;
+      }
+
+      const { userId } = req.params;
+      const status = await friendsService.getFriendshipStatus(req.user.userId, userId);
+      sendSuccess(res, status);
+    } catch (error) {
+      sendError(res, (error as Error).message, 400);
+    }
+  }
 }
