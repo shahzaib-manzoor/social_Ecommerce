@@ -8,112 +8,55 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../components/common/Header';
-import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppDispatch';
 import { colors, spacing, typography } from '../theme';
-import { api } from '../services/api';
+import { apiService } from '../services/api';
 
-interface WishlistCategory {
-  id: string;
-  name: string;
-  products: WishlistProduct[];
-}
-
-interface WishlistProduct {
+interface WishlistItem {
   _id: string;
-  title: string;
-  image: string;
-  price: number;
-  seller: {
+  product: {
+    _id: string;
+    title: string;
+    images: string[];
+    price: number;
+    category: string;
+  };
+  owner: {
     _id: string;
     username: string;
     avatar?: string;
   };
+  isOwn: boolean;
+  sharedWith: any[];
+  createdAt: string;
 }
 
 export const WishlistScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAppSelector((state) => state.auth);
-  const [wishlists, setWishlists] = useState<WishlistCategory[]>([]);
-  const [friends, setFriends] = useState<any[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [view, setView] = useState<'own' | 'combined'>('combined'); // Toggle between own and combined view
 
   useEffect(() => {
-    loadWishlists();
-  }, []);
+    loadWishlist();
+  }, [view]);
 
-  const loadWishlists = async () => {
+  const loadWishlist = async () => {
     try {
       setIsLoading(true);
-      // Mock data - replace with actual API call
-      const mockWishlists: WishlistCategory[] = [
-        {
-          id: '1',
-          name: 'Chocolate',
-          products: [
-            {
-              _id: '1',
-              title: 'iPhone 13',
-              image: 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Phone',
-              price: 999,
-              seller: { _id: '1', username: 'John', avatar: '' },
-            },
-          ],
-        },
-        {
-          id: '2',
-          name: 'Drinks',
-          products: [
-            {
-              _id: '2',
-              title: 'Laptop',
-              image: 'https://via.placeholder.com/150/000000/FFFFFF?text=Laptop',
-              price: 1299,
-              seller: { _id: '2', username: 'Sarah', avatar: '' },
-            },
-          ],
-        },
-        {
-          id: '3',
-          name: 'Ice Cream',
-          products: [
-            {
-              _id: '3',
-              title: 'Tablet',
-              image: 'https://via.placeholder.com/150/666666/FFFFFF?text=Tablet',
-              price: 599,
-              seller: { _id: '3', username: 'Mike', avatar: '' },
-            },
-          ],
-        },
-        {
-          id: '4',
-          name: 'Snacks',
-          products: [
-            {
-              _id: '4',
-              title: 'Headphones',
-              image: 'https://via.placeholder.com/150/CCCCCC/000000?text=Audio',
-              price: 299,
-              seller: { _id: '4', username: 'Lisa', avatar: '' },
-            },
-          ],
-        },
-      ];
+      const items = view === 'own'
+        ? await apiService.getMyWishlist()
+        : await apiService.getCombinedWishlist();
 
-      setWishlists(mockWishlists);
-
-      // Mock friends data
-      const mockFriends = [
-        { _id: '1', username: 'Anna', avatar: '' },
-        { _id: '2', username: 'Bob', avatar: '' },
-        { _id: '3', username: 'Carol', avatar: '' },
-        { _id: '4', username: 'David', avatar: '' },
-      ];
-      setFriends(mockFriends);
-    } catch (error) {
-      console.error('Failed to load wishlists:', error);
+      setWishlistItems(items);
+    } catch (error: any) {
+      console.error('Failed to load wishlist:', error);
+      Alert.alert('Error', error.message || 'Failed to load wishlist');
     } finally {
       setIsLoading(false);
     }
@@ -121,8 +64,31 @@ export const WishlistScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadWishlists();
+    await loadWishlist();
     setRefreshing(false);
+  };
+
+  const handleRemoveFromWishlist = async (productId: string) => {
+    try {
+      await apiService.removeFromWishlist(productId);
+      Alert.alert('Success', 'Product removed from wishlist');
+      loadWishlist();
+    } catch (error: any) {
+      console.error('Failed to remove from wishlist:', error);
+      Alert.alert('Error', error.message || 'Failed to remove from wishlist');
+    }
+  };
+
+  const handleShareWithFriends = async (productId: string) => {
+    navigation.navigate('ShareProduct', { productId, from: 'wishlist' });
+  };
+
+  const handleProductPress = (productId: string) => {
+    navigation.navigate('ProductDetail', { productId });
+  };
+
+  const handleOwnerPress = (userId: string) => {
+    navigation.navigate('UserProfile', { userId });
   };
 
   const handleMenuPress = () => {
@@ -133,13 +99,8 @@ export const WishlistScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     navigation.navigate('Search');
   };
 
-  const handleProductPress = (productId: string) => {
-    navigation.navigate('ProductDetail', { productId });
-  };
-
-  const handleShowAll = () => {
-    console.log('Show all wishlists');
-  };
+  const ownItems = wishlistItems.filter(item => item.isOwn);
+  const friendsItems = wishlistItems.filter(item => !item.isOwn);
 
   if (isLoading) {
     return (
@@ -155,6 +116,7 @@ export const WishlistScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   return (
     <View style={styles.container}>
       <Header onMenuPress={handleMenuPress} onSearchPress={handleSearchPress} />
+
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -162,58 +124,186 @@ export const WishlistScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         }
       >
         <View style={styles.content}>
-          <Text style={styles.pageTitle}>Wishlists</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.pageTitle}>Wishlist</Text>
 
-          {/* Wishlist Grid */}
-          <View style={styles.wishlistGrid}>
-            {wishlists.map((category) => (
-              <View key={category.id} style={styles.categoryContainer}>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <View style={styles.categoryProducts}>
-                  {category.products.map((product) => (
-                    <TouchableOpacity
-                      key={product._id}
-                      style={styles.productCard}
-                      onPress={() => handleProductPress(product._id)}
-                    >
-                      <Image source={{ uri: product.image }} style={styles.productImage} />
-                    </TouchableOpacity>
+            {/* View Toggle */}
+            <View style={styles.viewToggle}>
+              <TouchableOpacity
+                style={[styles.toggleButton, view === 'own' && styles.toggleButtonActive]}
+                onPress={() => setView('own')}
+              >
+                <Text style={[styles.toggleText, view === 'own' && styles.toggleTextActive]}>
+                  My Items
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleButton, view === 'combined' && styles.toggleButtonActive]}
+                onPress={() => setView('combined')}
+              >
+                <Text style={[styles.toggleText, view === 'combined' && styles.toggleTextActive]}>
+                  All
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {wishlistItems.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="heart-outline" size={80} color={colors.textSecondary} />
+              <Text style={styles.emptyText}>
+                {view === 'own' ? 'Your wishlist is empty' : 'No wishlist items yet'}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {view === 'own'
+                  ? 'Start adding products you love!'
+                  : 'Add items or wait for your friends to share theirs'}
+              </Text>
+            </View>
+          ) : (
+            <>
+              {/* My Items Section */}
+              {view === 'combined' && ownItems.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>My Items ({ownItems.length})</Text>
+                  <View style={styles.itemsGrid}>
+                    {ownItems.map((item) => (
+                      <WishlistItemCard
+                        key={item._id}
+                        item={item}
+                        onPress={() => handleProductPress(item.product._id)}
+                        onRemove={() => handleRemoveFromWishlist(item.product._id)}
+                        onShare={() => handleShareWithFriends(item.product._id)}
+                        onOwnerPress={() => {}}
+                        isOwn={true}
+                      />
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {/* Own Items View */}
+              {view === 'own' && (
+                <View style={styles.itemsGrid}>
+                  {ownItems.map((item) => (
+                    <WishlistItemCard
+                      key={item._id}
+                      item={item}
+                      onPress={() => handleProductPress(item.product._id)}
+                      onRemove={() => handleRemoveFromWishlist(item.product._id)}
+                      onShare={() => handleShareWithFriends(item.product._id)}
+                      onOwnerPress={() => {}}
+                      isOwn={true}
+                    />
                   ))}
                 </View>
-                {/* Seller Avatar */}
-                <View style={styles.sellerAvatar}>
-                  {category.products[0]?.seller && (
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>
-                        {category.products[0].seller.username[0].toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
+              )}
 
-          {/* Show All Button */}
-          <TouchableOpacity style={styles.showAllButton} onPress={handleShowAll}>
-            <Text style={styles.showAllText}>Show All</Text>
-          </TouchableOpacity>
-
-          {/* Friends Section */}
-          <View style={styles.friendsSection}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {friends.map((friend) => (
-                <TouchableOpacity key={friend._id} style={styles.friendAvatar}>
-                  <View style={styles.friendAvatarCircle}>
-                    <Text style={styles.friendAvatarText}>{friend.username[0].toUpperCase()}</Text>
+              {/* Friends' Items Section */}
+              {view === 'combined' && friendsItems.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Friends' Items ({friendsItems.length})</Text>
+                  <View style={styles.itemsGrid}>
+                    {friendsItems.map((item) => (
+                      <WishlistItemCard
+                        key={item._id}
+                        item={item}
+                        onPress={() => handleProductPress(item.product._id)}
+                        onRemove={() => {}}
+                        onShare={() => {}}
+                        onOwnerPress={() => handleOwnerPress(item.owner._id)}
+                        isOwn={false}
+                      />
+                    ))}
                   </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+                </>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
+  );
+};
+
+// Wishlist Item Card Component
+const WishlistItemCard: React.FC<{
+  item: WishlistItem;
+  onPress: () => void;
+  onRemove: () => void;
+  onShare: () => void;
+  onOwnerPress: () => void;
+  isOwn: boolean;
+}> = ({ item, onPress, onRemove, onShare, onOwnerPress, isOwn }) => {
+  return (
+    <TouchableOpacity style={styles.itemCard} onPress={onPress}>
+      {/* Product Image */}
+      <Image
+        source={{ uri: item.product.images[0] || 'https://via.placeholder.com/150' }}
+        style={styles.itemImage}
+      />
+
+      {/* Actions (only for own items) */}
+      {isOwn && (
+        <View style={styles.itemActions}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onShare();
+            }}
+          >
+            <Ionicons name="share-outline" size={18} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              Alert.alert(
+                'Remove from Wishlist',
+                'Are you sure you want to remove this item?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Remove', onPress: onRemove, style: 'destructive' },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Product Info */}
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemTitle} numberOfLines={2}>
+          {item.product.title}
+        </Text>
+        <Text style={styles.itemPrice}>${item.product.price.toFixed(2)}</Text>
+        <Text style={styles.itemCategory} numberOfLines={1}>
+          {item.product.category}
+        </Text>
+      </View>
+
+      {/* Owner Info (for friends' items) */}
+      {!isOwn && (
+        <TouchableOpacity style={styles.ownerInfo} onPress={onOwnerPress}>
+          {item.owner.avatar ? (
+            <Image source={{ uri: item.owner.avatar }} style={styles.ownerAvatar} />
+          ) : (
+            <View style={styles.ownerAvatarPlaceholder}>
+              <Text style={styles.ownerAvatarText}>
+                {item.owner.username[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <Text style={styles.ownerName} numberOfLines={1}>
+            {item.owner.username}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
   );
 };
 
@@ -233,93 +323,151 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
   },
+  header: {
+    marginBottom: spacing.lg,
+  },
   pageTitle: {
     ...typography.h2,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  wishlistGrid: {
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 4,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  toggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  toggleTextActive: {
+    color: colors.textInverse,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  itemsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
   },
-  categoryContainer: {
+  itemCard: {
     width: '48%',
-    marginBottom: spacing.lg,
-  },
-  categoryName: {
-    ...typography.small,
-    color: colors.text,
-    marginBottom: spacing.xs,
-    fontWeight: '500',
-  },
-  categoryProducts: {
     backgroundColor: colors.background,
     borderRadius: 12,
-    padding: spacing.sm,
-    minHeight: 100,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  productCard: {
-    marginBottom: spacing.xs,
-  },
-  productImage: {
+  itemImage: {
     width: '100%',
-    height: 80,
-    borderRadius: 8,
+    height: 150,
     backgroundColor: colors.backgroundSecondary,
   },
-  sellerAvatar: {
-    alignItems: 'flex-start',
-    marginTop: spacing.xs,
+  itemActions: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
-  avatar: {
+  actionButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  avatarText: {
-    color: colors.textInverse,
-    fontSize: 14,
-    fontWeight: 'bold',
+  itemInfo: {
+    padding: spacing.sm,
   },
-  showAllButton: {
-    alignSelf: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    marginBottom: spacing.xl,
-  },
-  showAllText: {
+  itemTitle: {
     ...typography.body,
-    color: colors.textInverse,
     fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
-  friendsSection: {
-    marginTop: spacing.md,
+  itemPrice: {
+    ...typography.h3,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: spacing.xs,
   },
-  friendAvatar: {
-    marginRight: spacing.md,
+  itemCategory: {
+    ...typography.small,
+    color: colors.textSecondary,
   },
-  friendAvatarCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  ownerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.sm,
+    paddingTop: 0,
+    gap: spacing.xs,
+  },
+  ownerAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  ownerAvatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: colors.background,
   },
-  friendAvatarText: {
+  ownerAvatarText: {
     color: colors.textInverse,
-    fontSize: 20,
+    fontSize: 10,
     fontWeight: 'bold',
+  },
+  ownerName: {
+    ...typography.small,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl * 2,
+  },
+  emptyText: {
+    ...typography.h3,
+    color: colors.text,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  emptySubtext: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
   },
 });

@@ -29,6 +29,7 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   };
 
   const menuItems = [
+    { id: 'friends', label: 'Friends & Requests', icon: 'people-outline', onPress: () => navigation.navigate('Friends') },
     { id: 'orders', label: 'My Orders', icon: 'receipt-outline', onPress: () => navigation.navigate('Orders') },
     { id: 'wishlist', label: 'Wishlist', icon: 'heart-outline', onPress: () => navigation.navigate('Wishlist') },
     { id: 'addresses', label: 'Saved Addresses', icon: 'location-outline', onPress: () => navigation.navigate('Addresses') },

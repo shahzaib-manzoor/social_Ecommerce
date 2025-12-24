@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,10 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { addToCart } from '../store/slices/cartSlice';
 import { likeProduct } from '../store/slices/productsSlice';
@@ -62,23 +64,38 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
-  useEffect(() => {
-    loadProduct();
-  }, [productId]);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     try {
       setIsLoading(true);
       const productData = await apiService.getProduct(productId);
       setProduct(productData);
       setIsLiked(user ? productData.likes.includes(user._id) : false);
+
+      // Check if in wishlist
+      if (user) {
+        try {
+          const inWishlist = await apiService.checkInWishlist(productId);
+          setIsInWishlist(inWishlist);
+        } catch (err) {
+          console.error('Failed to check wishlist status:', err);
+        }
+      }
     } catch (error) {
       console.error('Failed to load product:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productId, user]);
+
+  // Reload product when screen comes into focus (e.g., after submitting a review)
+  useFocusEffect(
+    useCallback(() => {
+      loadProduct();
+    }, [loadProduct])
+  );
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
@@ -113,6 +130,33 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
     }
     // Navigate to write review screen
     navigation.navigate('WriteReview', { productId: product?._id, productTitle: product?.title });
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!user) {
+      Alert.alert('Login Required', 'Please login to add products to your wishlist');
+      return;
+    }
+
+    if (wishlistLoading) return;
+
+    try {
+      setWishlistLoading(true);
+      if (isInWishlist) {
+        await apiService.removeFromWishlist(productId);
+        setIsInWishlist(false);
+        Alert.alert('Removed', 'Product removed from wishlist');
+      } else {
+        await apiService.addToWishlist(productId);
+        setIsInWishlist(true);
+        Alert.alert('Added', 'Product added to wishlist');
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle wishlist:', error);
+      Alert.alert('Error', error.message || 'Failed to update wishlist');
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -209,7 +253,10 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
             {product.reviews && product.reviews.length > 0 ? (
               product.reviews.slice(0, 3).map((review) => (
                 <View key={review._id} style={styles.reviewItem}>
-                  <View style={styles.reviewUser}>
+                  <TouchableOpacity
+                    style={styles.reviewUser}
+                    onPress={() => navigation.navigate('UserProfile', { userId: review.user._id })}
+                  >
                     <View style={styles.avatar}>
                       <Text style={styles.avatarText}>{review.user.username[0].toUpperCase()}</Text>
                     </View>
@@ -226,7 +273,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
                         ))}
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
                   <Text style={styles.reviewComment}>{review.comment}</Text>
                 </View>
               ))
@@ -245,6 +292,21 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
             size={28}
             color={isLiked ? colors.like : colors.text}
           />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleToggleWishlist}
+          style={styles.wishlistButton}
+          disabled={wishlistLoading}
+        >
+          {wishlistLoading ? (
+            <ActivityIndicator size="small" color={colors.text} />
+          ) : (
+            <Ionicons
+              name={isInWishlist ? 'bookmark' : 'bookmark-outline'}
+              size={28}
+              color={isInWishlist ? colors.primary : colors.text}
+            />
+          )}
         </TouchableOpacity>
         <TouchableOpacity onPress={handleAddToCart} style={styles.addToCartButton}>
           <Text style={styles.addToCartText}>Add to Cart</Text>
@@ -445,6 +507,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   likeButton: {
+    width: 56,
+    height: 48,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  wishlistButton: {
     width: 56,
     height: 48,
     borderWidth: 1,

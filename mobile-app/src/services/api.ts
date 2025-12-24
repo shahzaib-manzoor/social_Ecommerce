@@ -225,6 +225,18 @@ class ApiService {
     return data.data;
   }
 
+  async getFriendshipStatus(userId: string): Promise<{
+    status: 'friends' | 'pending_sent' | 'pending_received' | 'none';
+    requestId?: string;
+  }> {
+    const { data } = await this.api.get<ApiResponse<{
+      status: 'friends' | 'pending_sent' | 'pending_received' | 'none';
+      requestId?: string;
+    }>>(`/friends/status/${userId}`);
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to get friendship status');
+    return data.data;
+  }
+
   // Messages APIs
   async getOrCreateConversation(userId: string): Promise<Conversation> {
     const { data } = await this.api.post<ApiResponse<Conversation>>('/messages/conversations', { userId });
@@ -290,6 +302,48 @@ class ApiService {
     const { data } = await this.api.put<ApiResponse<User>>('/users/profile', updates);
     if (!data.success || !data.data) throw new Error(data.error || 'Failed to update profile');
     return data.data;
+  }
+
+  async updateAvatar(avatar: string): Promise<User> {
+    const { data } = await this.api.put<ApiResponse<User>>('/users/avatar', { avatar });
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to update avatar');
+    return data.data;
+  }
+
+  // Wishlist APIs
+  async addToWishlist(productId: string): Promise<any> {
+    const { data } = await this.api.post<ApiResponse<any>>('/wishlist', { productId });
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to add to wishlist');
+    return data.data;
+  }
+
+  async removeFromWishlist(productId: string): Promise<void> {
+    const { data } = await this.api.delete<ApiResponse<any>>(`/wishlist/${productId}`);
+    if (!data.success) throw new Error(data.error || 'Failed to remove from wishlist');
+  }
+
+  async getMyWishlist(): Promise<any[]> {
+    const { data } = await this.api.get<ApiResponse<any[]>>('/wishlist/my');
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to get wishlist');
+    return data.data;
+  }
+
+  async getCombinedWishlist(): Promise<any[]> {
+    const { data } = await this.api.get<ApiResponse<any[]>>('/wishlist/combined');
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to get combined wishlist');
+    return data.data;
+  }
+
+  async shareWishlistWithFriends(productId: string, friendIds: string[]): Promise<any> {
+    const { data } = await this.api.post<ApiResponse<any>>('/wishlist/share', { productId, friendIds });
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to share wishlist');
+    return data.data;
+  }
+
+  async checkInWishlist(productId: string): Promise<boolean> {
+    const { data } = await this.api.get<ApiResponse<{ isInWishlist: boolean }>>(`/wishlist/check/${productId}`);
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to check wishlist');
+    return data.data.isInWishlist;
   }
 }
 

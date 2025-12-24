@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { HomeScreen } from '../screens/HomeScreen';
-import { FriendsScreen } from '../screens/FriendsScreen';
-import { CartScreen } from '../screens/CartScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
+import { HomeStackNavigator } from './HomeStackNavigator';
+import { FriendsStackNavigator } from './FriendsStackNavigator';
+import { CartStackNavigator } from './CartStackNavigator';
+import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -32,7 +32,7 @@ export const TabNavigator: React.FC = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStackNavigator}
         options={{
           tabBarLabel: 'HOME',
           tabBarIcon: ({ color, size }) => (
@@ -42,7 +42,7 @@ export const TabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Friends"
-        component={FriendsScreen}
+        component={FriendsStackNavigator}
         options={{
           tabBarLabel: 'FRIENDS',
           tabBarIcon: ({ color, size }) => (
@@ -52,7 +52,7 @@ export const TabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Cart"
-        component={CartScreen}
+        component={CartStackNavigator}
         options={{
           tabBarLabel: 'CART',
           tabBarIcon: ({ color, size }) => (
@@ -62,7 +62,7 @@ export const TabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           tabBarLabel: 'PROFILE',
           tabBarIcon: ({ color, size }) => (
