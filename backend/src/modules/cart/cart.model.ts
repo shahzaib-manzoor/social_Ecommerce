@@ -43,6 +43,6 @@ const cartSchema = new Schema<ICart>(
 );
 
 // Index for quick user cart lookup
-cartSchema.index({ userId: 1 });
+// Note: userId already has unique index from schema definition
 
 export const Cart = mongoose.model<ICart>('Cart', cartSchema);

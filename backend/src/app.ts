@@ -19,6 +19,9 @@ import wishlistRoutes from './modules/wishlist/wishlist.routes';
 
 const app: Application = express();
 
+// Trust proxy - required for Railway/reverse proxies to get correct client IPs
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
