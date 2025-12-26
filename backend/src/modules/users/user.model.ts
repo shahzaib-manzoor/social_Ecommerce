@@ -69,8 +69,7 @@ const userSchema = new Schema<IUser>(
 );
 
 // Indexes for performance
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
+// Note: username and email already have unique indexes from schema definition
 userSchema.index({ role: 1 });
 
 // Don't return password in JSON

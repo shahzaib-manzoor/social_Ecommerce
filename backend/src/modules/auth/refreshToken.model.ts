@@ -31,7 +31,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
 );
 
 // Index for quick token lookup and auto-deletion of expired tokens
-refreshTokenSchema.index({ token: 1 });
+// Note: token already has unique index from schema definition
 refreshTokenSchema.index({ userId: 1 });
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
 
