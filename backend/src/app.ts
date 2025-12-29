@@ -16,6 +16,7 @@ import usersRoutes from './modules/users/users.routes';
 import uploadRoutes from './modules/upload/upload.routes';
 import categoryRoutes from './modules/categories/category.routes';
 import wishlistRoutes from './modules/wishlist/wishlist.routes';
+import orderRoutes from './modules/orders/order.routes';
 
 const app: Application = express();
 
@@ -86,6 +87,7 @@ app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
+app.use('/api/v1/orders', orderRoutes);
 
 // Error handlers
 app.use(notFoundHandler);
