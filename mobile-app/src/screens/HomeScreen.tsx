@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProducts, likeProduct, clearProducts } from '../store/slices/productsSlice';
@@ -16,6 +17,7 @@ import { CategoryCard } from '../components/common/CategoryCard';
 import { HeroBanner } from '../components/common/HeroBanner';
 import { Header } from '../components/common/Header';
 import { colors, spacing, typography } from '../theme';
+import { apiService } from '../services/api';
 
 // Mock data for hero banner
 const BANNER_ITEMS = [
@@ -30,10 +32,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { categories, isLoading: categoriesLoading } = useAppSelector((state) => state.categories);
   const { user } = useAppSelector((state) => state.auth);
   const [refreshing, setRefreshing] = useState(false);
+  const [wishlistStatus, setWishlistStatus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadWishlistStatus();
   }, []);
 
   const loadProducts = () => {
@@ -44,16 +48,56 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     dispatch(fetchCategories());
   };
 
+  const loadWishlistStatus = async () => {
+    if (!user) return;
+
+    try {
+      const wishlist = await apiService.getMyWishlist();
+      const statusMap: Record<string, boolean> = {};
+      wishlist.forEach((item: any) => {
+        statusMap[item.product._id] = true;
+      });
+      setWishlistStatus(statusMap);
+    } catch (error) {
+      console.error('Failed to load wishlist status:', error);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     dispatch(clearProducts());
     await dispatch(fetchProducts({ page: 1, limit: 20 }));
     await dispatch(fetchCategories());
+    await loadWishlistStatus();
     setRefreshing(false);
   };
 
   const handleLike = (productId: string) => {
     dispatch(likeProduct(productId));
+  };
+
+  const handleWishlistToggle = async (productId: string) => {
+    if (!user) {
+      Alert.alert('Login Required', 'Please login to add items to your wishlist');
+      return;
+    }
+
+    const isCurrentlyInWishlist = wishlistStatus[productId];
+
+    try {
+      if (isCurrentlyInWishlist) {
+        await apiService.removeFromWishlist(productId);
+        setWishlistStatus(prev => ({ ...prev, [productId]: false }));
+        Alert.alert('Removed', 'Product removed from wishlist');
+      } else {
+        await apiService.addToWishlist(productId);
+        setWishlistStatus(prev => ({ ...prev, [productId]: true }));
+        Alert.alert('Added', 'Product added to wishlist');
+      }
+    } catch (error: any) {
+      console.error('Wishlist toggle error:', error);
+      Alert.alert('Error', error.message || 'Failed to update wishlist');
+    }
   };
 
   const handleCategoryPress = (categoryId: string, categoryName: string) => {
@@ -136,8 +180,8 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               key={product._id}
               product={product}
               onPress={() => navigation.navigate('ProductDetail', { productId: product._id })}
-              onLike={() => handleLike(product._id)}
-              isLiked={user ? product.likes.includes(user._id) : false}
+              onWishlistToggle={() => handleWishlistToggle(product._id)}
+              isInWishlist={wishlistStatus[product._id] || false}
               compact
             />
           ))}

@@ -6,6 +6,7 @@ import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 import { WishlistScreen } from '../screens/WishlistScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { SearchUsersScreen } from '../screens/SearchUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -13,6 +14,7 @@ export const FriendsStackNavigator: React.FC = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="FriendsMain" component={FriendsScreen} />
+      <Stack.Screen name="SearchUsers" component={SearchUsersScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="Messages" component={MessagesScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />

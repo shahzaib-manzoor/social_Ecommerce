@@ -5,7 +5,7 @@ import { fetchCart, updateCartItem, removeFromCart, clearCart } from '../store/s
 import { Button } from '../components/common/Button';
 import { colors, typography, spacing } from '../theme';
 
-export const CartScreen: React.FC = () => {
+export const CartScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { cart, isLoading } = useAppSelector((state) => state.cart);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -89,7 +89,7 @@ export const CartScreen: React.FC = () => {
           <Text style={styles.totalAmount}>${cart.total.toFixed(2)}</Text>
         </View>
 
-        <Button title="Checkout" onPress={() => Alert.alert('Checkout', 'Checkout feature coming soon!')} fullWidth />
+        <Button title="Checkout" onPress={() => navigation.navigate('Checkout')} fullWidth />
         <Button title="Clear Cart" onPress={handleClearCart} variant="outline" fullWidth style={styles.clearButton} />
       </View>
     </View>

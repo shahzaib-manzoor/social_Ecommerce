@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
 
@@ -22,6 +23,8 @@ export const WriteReviewScreen: React.FC<{ route: any; navigation: any }> = ({
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
@@ -52,7 +55,7 @@ export const WriteReviewScreen: React.FC<{ route: any; navigation: any }> = ({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -140,7 +143,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -149,7 +153,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     ...typography.h4,

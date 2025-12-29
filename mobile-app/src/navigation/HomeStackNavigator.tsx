@@ -9,6 +9,8 @@ import { WishlistScreen } from '../screens/WishlistScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { FriendsScreen } from '../screens/FriendsScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { AllProductsScreen } from '../screens/AllProductsScreen';
+import { SearchUsersScreen } from '../screens/SearchUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,7 +43,9 @@ export const HomeStackNavigator: React.FC = () => {
       <Stack.Screen name="Friends" component={FriendsScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Categories" component={PlaceholderScreen} />
-      <Stack.Screen name="AllProducts" component={PlaceholderScreen} />
+      <Stack.Screen name="Products" component={AllProductsScreen} />
+      <Stack.Screen name="AllProducts" component={AllProductsScreen} />
+      <Stack.Screen name="SearchUsers" component={SearchUsersScreen} />
       <Stack.Screen name="ShareProduct" component={PlaceholderScreen} />
     </Stack.Navigator>
   );

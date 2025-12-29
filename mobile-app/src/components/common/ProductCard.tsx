@@ -10,6 +10,9 @@ interface ProductCardProps {
   showLikeButton?: boolean;
   isLiked?: boolean;
   compact?: boolean;
+  onWishlistToggle?: () => void;
+  isInWishlist?: boolean;
+  showWishlistButton?: boolean;
 }
 
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
@@ -34,6 +37,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   showLikeButton = true,
   isLiked = false,
   compact = false,
+  onWishlistToggle,
+  isInWishlist = false,
+  showWishlistButton = true,
 }) => {
   const rating = product.rating || 7.5;
 
@@ -45,10 +51,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           style={[styles.image, compact && styles.imageCompact]}
           resizeMode="cover"
         />
-        {showLikeButton && onLike && (
-          <TouchableOpacity onPress={onLike} style={styles.heartButton}>
+        {showWishlistButton && onWishlistToggle && (
+          <TouchableOpacity onPress={onWishlistToggle} style={styles.heartButton}>
             <Text style={styles.heartIcon}>
-              {isLiked ? '❤️' : '🤍'}
+              {isInWishlist ? '❤️' : '🤍'}
             </Text>
           </TouchableOpacity>
         )}

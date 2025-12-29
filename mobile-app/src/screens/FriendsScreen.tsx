@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
 
@@ -35,6 +36,7 @@ interface FriendRequest {
 }
 
 export const FriendsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'friends' | 'requests'>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
@@ -155,8 +157,8 @@ export const FriendsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Friends</Text>
@@ -172,12 +174,12 @@ export const FriendsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+        <TouchableOpacity onPress={handleBackPress} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Friends</Text>
-        <TouchableOpacity onPress={handleSearchPress} style={styles.searchButton}>
+        <TouchableOpacity onPress={handleSearchPress} style={styles.searchButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="search" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
@@ -338,16 +340,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 56,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   backButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     ...typography.h4,
@@ -355,7 +363,11 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   searchButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   placeholder: {
     width: 40,

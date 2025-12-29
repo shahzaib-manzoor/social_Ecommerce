@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
 import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
@@ -22,6 +23,8 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   const [bio, setBio] = useState(user?.bio || '');
   const [interests, setInterests] = useState(user?.interests?.join(', ') || '');
   const [isLoading, setIsLoading] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   const handleSave = async () => {
     try {
@@ -61,7 +64,7 @@ export const EditProfileScreen: React.FC<{ navigation: any }> = ({ navigation })
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={handleCancel} style={styles.headerButton}>
           <Text style={styles.headerButtonText}>Cancel</Text>
         </TouchableOpacity>
@@ -168,7 +171,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -178,8 +182,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerButton: {
-    padding: spacing.xs,
-    minWidth: 60,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerButtonText: {
     ...typography.body,

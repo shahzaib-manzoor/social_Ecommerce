@@ -345,6 +345,31 @@ class ApiService {
     if (!data.success || !data.data) throw new Error(data.error || 'Failed to check wishlist');
     return data.data.isInWishlist;
   }
+
+  // Order APIs
+  async createOrder(orderData: { shippingAddress: any; notes?: string }): Promise<any> {
+    const { data } = await this.api.post<ApiResponse<any>>('/orders', orderData);
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to create order');
+    return data.data;
+  }
+
+  async getMyOrders(): Promise<any[]> {
+    const { data } = await this.api.get<ApiResponse<any[]>>('/orders/my');
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to get orders');
+    return data.data;
+  }
+
+  async getOrder(orderId: string): Promise<any> {
+    const { data } = await this.api.get<ApiResponse<any>>(`/orders/${orderId}`);
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to get order');
+    return data.data;
+  }
+
+  async cancelOrder(orderId: string): Promise<any> {
+    const { data } = await this.api.patch<ApiResponse<any>>(`/orders/${orderId}/cancel`);
+    if (!data.success || !data.data) throw new Error(data.error || 'Failed to cancel order');
+    return data.data;
+  }
 }
 
 export const apiService = new ApiService();

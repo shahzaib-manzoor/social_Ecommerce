@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
@@ -47,6 +48,8 @@ export const UserProfileScreen: React.FC<{ route: any; navigation: any }> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   // Ensure both IDs are strings for comparison
   const isOwnProfile = currentUser?._id?.toString() === userId?.toString();
@@ -187,7 +190,7 @@ export const UserProfileScreen: React.FC<{ route: any; navigation: any }> = ({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -204,7 +207,7 @@ export const UserProfileScreen: React.FC<{ route: any; navigation: any }> = ({
   if (!profile) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -301,7 +304,7 @@ export const UserProfileScreen: React.FC<{ route: any; navigation: any }> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -395,7 +398,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -404,7 +408,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     ...typography.h4,

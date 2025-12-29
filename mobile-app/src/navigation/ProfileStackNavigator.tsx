@@ -7,6 +7,7 @@ import { UserProfileScreen } from '../screens/UserProfileScreen';
 import { WishlistScreen } from '../screens/WishlistScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
+import { SearchUsersScreen } from '../screens/SearchUsersScreen';
 
 const Stack = createStackNavigator();
 
@@ -36,6 +37,7 @@ export const ProfileStackNavigator: React.FC = () => {
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Messages" component={MessagesScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="SearchUsers" component={SearchUsersScreen} />
       <Stack.Screen name="Orders" component={PlaceholderScreen} />
       <Stack.Screen name="Addresses" component={PlaceholderScreen} />
       <Stack.Screen name="PaymentMethods" component={PlaceholderScreen} />

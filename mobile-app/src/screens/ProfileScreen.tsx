@@ -8,12 +8,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
 import { logout } from '../store/slices/authSlice';
 import { colors, spacing, typography } from '../theme';
 
 export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user } = useAppSelector((state) => state.auth);
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
 
   const handleLogout = async () => {
@@ -41,7 +43,7 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
         <Text style={styles.headerTitle}>PROFILE</Text>
       </View>
 
@@ -103,7 +105,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',

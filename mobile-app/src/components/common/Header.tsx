@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../theme';
 
 interface HeaderProps {
@@ -16,13 +17,15 @@ export const Header: React.FC<HeaderProps> = ({
   showMenu = true,
   showSearch = true,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top > 0 ? insets.top : spacing.sm }]}>
         <View style={styles.leftSection}>
           {showMenu && (
-            <TouchableOpacity onPress={onMenuPress} style={styles.iconButton}>
+            <TouchableOpacity onPress={onMenuPress} style={styles.iconButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="menu" size={28} color={colors.textInverse} />
             </TouchableOpacity>
           )}
@@ -30,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <View style={styles.rightSection}>
           {showSearch && (
-            <TouchableOpacity onPress={onSearchPress} style={styles.iconButton}>
+            <TouchableOpacity onPress={onSearchPress} style={styles.iconButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="search" size={24} color={colors.textInverse} />
             </TouchableOpacity>
           )}
@@ -42,12 +45,13 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 56,
+    minHeight: 56,
     backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -57,12 +61,18 @@ const styles = StyleSheet.create({
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 44,
   },
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 44,
   },
   iconButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

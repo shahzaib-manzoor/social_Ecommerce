@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { addToCart } from '../store/slices/cartSlice';
@@ -66,6 +67,8 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   const [isLiked, setIsLiked] = useState(false);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   const loadProduct = useCallback(async () => {
     try {
@@ -181,7 +184,7 @@ export const ProductDetailScreen: React.FC<{ route: any; navigation: any }> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -327,7 +330,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -337,7 +341,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     ...typography.h4,

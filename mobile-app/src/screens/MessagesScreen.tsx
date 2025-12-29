@@ -10,6 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
@@ -37,6 +38,8 @@ export const MessagesScreen: React.FC<{ navigation: any; route?: any }> = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const insets = useSafeAreaInsets();
 
   // Check if we need to navigate to a specific conversation
   const userId = route?.params?.userId;
@@ -152,7 +155,7 @@ export const MessagesScreen: React.FC<{ navigation: any; route?: any }> = ({
   if (isLoading && conversations.length === 0) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
           <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -169,7 +172,7 @@ export const MessagesScreen: React.FC<{ navigation: any; route?: any }> = ({
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -201,7 +204,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -211,7 +215,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   backButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     ...typography.h4,

@@ -1,6 +1,8 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeStackNavigator } from './HomeStackNavigator';
 import { FriendsStackNavigator } from './FriendsStackNavigator';
 import { CartStackNavigator } from './CartStackNavigator';
@@ -20,8 +22,8 @@ export const TabNavigator: React.FC = () => {
           backgroundColor: colors.background,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + (Platform.OS === 'ios' ? insets.bottom : 0),
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

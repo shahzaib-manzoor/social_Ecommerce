@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
@@ -51,6 +52,8 @@ export const ConversationScreen: React.FC<{ route: any; navigation: any }> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  const insets = useSafeAreaInsets();
 
   const otherUser = conversation?.participants?.[0];
 
@@ -178,7 +181,7 @@ export const ConversationScreen: React.FC<{ route: any; navigation: any }> = ({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
           <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -199,7 +202,7 @@ export const ConversationScreen: React.FC<{ route: any; navigation: any }> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -268,7 +271,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   header: {
-    height: 56,
+    minHeight: 56,
+    paddingBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -278,7 +282,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   backButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerUser: {
     flexDirection: 'row',

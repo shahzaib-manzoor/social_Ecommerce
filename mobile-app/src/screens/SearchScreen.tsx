@@ -8,11 +8,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProductCard } from '../components/common/ProductCard';
 import { colors, spacing, typography } from '../theme';
 import { apiService } from '../services/api';
+
+const { width } = Dimensions.get('window');
 
 interface Product {
   _id: string;
@@ -26,6 +30,7 @@ interface Product {
 }
 
 export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,8 +138,12 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header with Search */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.searchContainer}>
@@ -150,7 +159,11 @@ export const SearchScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             autoFocus
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              style={styles.clearButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
               <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
@@ -265,8 +278,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
@@ -277,8 +290,12 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   backButton: {
-    padding: spacing.xs,
-    marginRight: spacing.sm,
+    padding: spacing.sm,
+    marginRight: spacing.xs,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
     flex: 1,
@@ -287,20 +304,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
-    height: 44,
+    minHeight: 44,
   },
   searchIcon: {
     marginRight: spacing.sm,
   },
   searchInput: {
     flex: 1,
-    height: 44,
+    minHeight: 44,
     ...typography.body,
     color: colors.text,
     fontSize: 15,
   },
   clearButton: {
-    padding: spacing.xs,
+    padding: spacing.sm,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoriesContainer: {
     backgroundColor: colors.background,
